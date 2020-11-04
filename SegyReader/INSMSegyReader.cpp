@@ -53,6 +53,7 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 
 	para->obj->add();
 	ifile.close();
+	delete para;
 }
 
 
