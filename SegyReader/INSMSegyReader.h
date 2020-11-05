@@ -24,7 +24,8 @@ private:
 	int xline, iline;
 	int traceCount, xlineCount, ilineCount;
 	HeadData si;//采样点数
-	std::vector<std::vector<Data>> data;
+	//std::vector<std::vector<Data>> data;
+	float** data;
 	inline void add() {
 		isok++; 
 		//std::cout << "233: "<<isok << std::endl ;
@@ -59,7 +60,7 @@ public:
 		data.s[1] = data.s[0];
 		data.s[0] = temp;
 	}
-	inline void setData(int i, std::vector<Data> &_data) {
+	inline void setData(int i, float* _data) {
 		data[i] = _data;
 	}
 	inline int getTraceCount() {
@@ -77,9 +78,15 @@ public:
 	inline int getxLineStart() {
 		return xline;
 	}
-	std::vector<std::vector<Data>>& getData() {
+	inline int getSampleSize() {
+		return si.a;
+	}
+	/*std::vector<std::vector<Data>>& getData() {
 		std::vector<std::vector<Data>>& res = data;
 		return res;
+	}*/
+	float ** getData() {
+		return data;
 	}
 };
 

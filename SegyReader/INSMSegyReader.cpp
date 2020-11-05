@@ -20,6 +20,11 @@ CINSMSegyReader::CINSMSegyReader(const char* _name, int _n)
 
 CINSMSegyReader::~CINSMSegyReader()
 {
+	if (data) {
+		for (int i = 0; i < traceCount; i++)
+			delete[] data[i];
+		delete[] data;
+	}
 }
 
 int CINSMSegyReader::getSize()
@@ -42,7 +47,7 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 
 	for (int i = 0; i < para->count; i++) {
 		ifile.seekg(240, ios::cur);
-		vector<Data> temp;
+		float* temp = new float[para->obj->si.a];
 		if (ifile.eof())
 			break;
 		for (int j = 0; j < para->obj->si.a; j++) {
@@ -50,7 +55,7 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 			ifile.read(buffer.s, 4);
 			para->obj->swap4(buffer);
 			buffer.a = IBM2IEEE(buffer);
-			temp.push_back(buffer);
+			temp[j] = buffer.a;
 		}
 		//if(i % 1000 == 0)std::cout << i << std::endl;
 		para->obj->setData(para->id * para->count + i, temp);
@@ -175,7 +180,7 @@ bool CINSMSegyReader::ReadSegyFile()
 
 	int count = traceCount / ThreadNum;
 	
-	data.resize(traceCount);
+	data = new float*[traceCount];
 
 	Data buffer;
 	ifile.seekg(3608, ios::beg);

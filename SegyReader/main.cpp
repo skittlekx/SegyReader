@@ -12,7 +12,7 @@ int main() {
 	time_t finish_t1 = clock();
 	cout << "Single Thread cost " << (double)(finish_t1 - begin_t1) / CLOCKS_PER_SEC << " s" << endl;
 */
-
+	/*
 	CINSMSegyReader* st = new CINSMSegyReader("D:\\Attributes\\tah67_ant.sgy", 1);
 	time_t begin_t = clock();
 	st->ReadSegyFile();
@@ -67,7 +67,7 @@ int main() {
 
 	//system("pause");
 	delete st;
-
+	*/
 	CINSMSegyReader st1("D:\\Attributes\\tah67_ant.sgy", 6);
 	time_t begin_t1 = clock();
 	st1.ReadSegyFile();
@@ -77,10 +77,10 @@ int main() {
 	cout << "Muti Thread cost " << (double)(finish_t1 - begin_t1) / CLOCKS_PER_SEC << " s" << endl;
 	
 	std::cout << st1.getTraceCount() << "," << st1.getiLineCount() << "," << st1.getxLineCount() << "," << st1.getiLineStart() << "," << st1.getxLineStart();
-	auto data = st1.getData()[0];
+	auto data = st1.getData()[76431];
 	std::cout << std::endl;
-	for (auto v : data) {
-		std::cout << v.a << " ";
+	for (int i = 0; i < st1.getSampleSize();i++) {
+		std::cout << data[i] << " ";
 	}
 	std::cout << std::endl;
 	system("pause");
