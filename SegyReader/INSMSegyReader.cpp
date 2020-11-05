@@ -35,12 +35,16 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 
 	ifstream ifile;
 	ifile.open(para->obj->fileName, ios::binary | ios::in);
+	if (ifile.fail())
+		return;
 
 	ifile.seekg(start, ios::beg);
 
 	for (int i = 0; i < para->count; i++) {
 		ifile.seekg(240, ios::cur);
 		vector<Data> temp;
+		if (ifile.eof())
+			break;
 		for (int j = 0; j < para->obj->si.a; j++) {
 			Data buffer;
 			ifile.read(buffer.s, 4);
@@ -48,9 +52,10 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 			buffer.a = IBM2IEEE(buffer);
 			temp.push_back(buffer);
 		}
+		//if(i % 1000 == 0)std::cout << i << std::endl;
 		para->obj->setData(para->id * para->count + i, temp);
 	}
-
+	//std::cout << "Done" << std::endl;
 	para->obj->add();
 	ifile.close();
 	delete para;
@@ -144,6 +149,7 @@ bool CINSMSegyReader::ReadSegyFile()
 	ifstream ifile;
 	ifile.open(fileName, ios::binary | ios::in);
 
+	isok = 0;
 	if (ifile.fail()) {
 		return false;
 	}
@@ -194,10 +200,8 @@ bool CINSMSegyReader::ReadSegyFile()
 
 	xline = xs;
 	iline = is;
-	xlineCount = xe - xs;
-	ilineCount = ie - is;
-
-
+	xlineCount = xe - xs + 1;
+	ilineCount = ie - is + 1;
 
 	ifile.close();
 	for (int i = 0; i < ThreadNum; i++) {
@@ -212,7 +216,7 @@ bool CINSMSegyReader::ReadSegyFile()
 		f.detach();
 	}
 	
-	while (isok != ThreadNum);
+	//while (!isOk());
 
 	return true;
 }

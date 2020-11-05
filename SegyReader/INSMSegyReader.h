@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
 
 union HeadData { unsigned short a; char s[2]; };
 union Data { unsigned int i; float a; char s[4]; };
@@ -21,20 +22,27 @@ private:
 	int ThreadNum;
 	int isok;
 	int xline, iline;
-	int traceCount,xlineCount,ilineCount;
-	union HeadData si;//采样点数
+	int traceCount, xlineCount, ilineCount;
+	HeadData si;//采样点数
 	std::vector<std::vector<Data>> data;
+	inline void add() {
+		isok++; 
+		//std::cout << "233: "<<isok << std::endl ;
+	}
 public:
 	CINSMSegyReader();
-	CINSMSegyReader(const char* _name,int _n);
+	CINSMSegyReader(const char* _name, int _n);
 
 	~CINSMSegyReader();
 
 	bool ReadSegyFile();
 	int getSize();
-	inline void add() { isok++; }
 	static void pRead(ThreadParam * para);
 	static float IBM2IEEE(Data);
+
+	inline bool isFinish() {
+		return isok >= ThreadNum;
+	}
 
 	inline void swap4(Data &data) {
 		char temp = data.s[3];
