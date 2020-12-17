@@ -23,23 +23,31 @@ private:
 	int isok;
 	int xline, iline;
 	int traceCount, xlineCount, ilineCount;
-	HeadData si;//采样点数
+	float*Thresholds[2];
+	float vMin, vMax;
+	int si;//采样点数
+	int dataType;
 	//std::vector<std::vector<Data>> data;
 	float** data;
 	inline void add() {
 		isok++; 
 		//std::cout << "233: "<<isok << std::endl ;
 	}
+
+	bool isReadHeader;
+	float(*dataTransfrom)(Data);//函数指针，读取IEEE float 或者 IBM float
 public:
 	CINSMSegyReader();
 	CINSMSegyReader(const char* _name, int _n);
 
 	~CINSMSegyReader();
 
+	bool ReadSegyHeader();
 	bool ReadSegyFile();
 	int getSize();
 	static void pRead(ThreadParam * para);
 	static float IBM2IEEE(Data);
+	static float IEEEfloat(Data);
 
 	inline bool isFinish() {
 		return isok >= ThreadNum;
@@ -79,14 +87,23 @@ public:
 		return xline;
 	}
 	inline int getSampleSize() {
-		return si.a;
+		return si;
+	}
+	inline float getMaxValue() {
+		return vMax;
+	}
+	inline float getMinValue() {
+		return vMin;
 	}
 	/*std::vector<std::vector<Data>>& getData() {
 		std::vector<std::vector<Data>>& res = data;
 		return res;
 	}*/
+	float ** _NormlizeData();
 	float ** getData() {
 		return data;
 	}
+
+	void UpdataThreshold();
 };
 

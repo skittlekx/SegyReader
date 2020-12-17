@@ -4,14 +4,16 @@
 using namespace std;
 
 int main() {
-	/*CINSMSegyReader st1("D:\\Attributes\\tah67_ant.sgy", 1);
+	//CINSMSegyReader st1("D:/skxFile/code/数据工程/S80/S80 - 副本 2018 8 23/xianggan.segy", 6);
+	CINSMSegyReader st1("D:\\Attributes\\tah67_junfanggenzhenfu.sgy", 6);
 	time_t begin_t1 = clock();
 	st1.ReadSegyFile();
 
 	while (!st1.isFinish());
+	st1.UpdataThreshold();
 	time_t finish_t1 = clock();
 	cout << "Single Thread cost " << (double)(finish_t1 - begin_t1) / CLOCKS_PER_SEC << " s" << endl;
-*/
+
 	/*
 	CINSMSegyReader* st = new CINSMSegyReader("D:\\Attributes\\tah67_ant.sgy", 1);
 	time_t begin_t = clock();
@@ -67,7 +69,7 @@ int main() {
 
 	//system("pause");
 	delete st;
-	*/
+	
 	CINSMSegyReader st1("D:\\Attributes\\tah67_ant.sgy", 6);
 	time_t begin_t1 = clock();
 	st1.ReadSegyFile();
@@ -82,7 +84,8 @@ int main() {
 	for (int i = 0; i < st1.getSampleSize();i++) {
 		std::cout << data[i] << " ";
 	}
-	std::cout << std::endl;
+	std::cout << std::endl;*/
+	
 	system("pause");
 	return 0;
 }

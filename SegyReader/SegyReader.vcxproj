@@ -115,9 +115,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="INSMCalcConPath.h" />
     <ClInclude Include="INSMSegyReader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="INSMCalcConPath.cpp" />
     <ClCompile Include="INSMSegyReader.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

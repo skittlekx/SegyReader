@@ -18,12 +18,18 @@
     <ClInclude Include="INSMSegyReader.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="INSMCalcConPath.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="INSMSegyReader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="INSMCalcConPath.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -14,7 +14,13 @@ CINSMSegyReader::CINSMSegyReader(const char* _name, int _n)
 	:fileName(_name)
 	,ThreadNum(_n)
 	,isok(0)
+	,isReadHeader(false)
+	,vMax(-FLT_MAX)
+	,vMin(FLT_MAX)
 {
+	Thresholds[0] = nullptr;
+	Thresholds[1] = nullptr;
+	dataTransfrom = NULL;
 }
 
 
@@ -24,6 +30,15 @@ CINSMSegyReader::~CINSMSegyReader()
 		for (int i = 0; i < traceCount; i++)
 			delete[] data[i];
 		delete[] data;
+	}
+	if (Thresholds[0]) {
+		delete Thresholds[0];
+		Thresholds[0] = nullptr;
+	}
+
+	if (Thresholds[1]) {
+		delete Thresholds[1];
+		Thresholds[1] = nullptr;
 	}
 }
 
@@ -47,15 +62,19 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 
 	for (int i = 0; i < para->count; i++) {
 		ifile.seekg(240, ios::cur);
-		float* temp = new float[para->obj->si.a];
-		if (ifile.eof())
+		float* temp = new float[para->obj->si];
+		if (para->id * para->count + i >= para->obj->traceCount || ifile.eof())
 			break;
-		for (int j = 0; j < para->obj->si.a; j++) {
+		for (int j = 0; j < para->obj->si; j++) {
 			Data buffer;
 			ifile.read(buffer.s, 4);
 			para->obj->swap4(buffer);
-			buffer.a = IBM2IEEE(buffer);
-			temp[j] = buffer.a;
+			temp[j] = para->obj->dataTransfrom(buffer);
+
+			para->obj->Thresholds[0][para->id] = 
+				temp[j] < para->obj->Thresholds[0][para->id] ? temp[j] : para->obj->Thresholds[0][para->id];
+			para->obj->Thresholds[1][para->id] = 
+				temp[j] > para->obj->Thresholds[1][para->id] ? temp[j] : para->obj->Thresholds[1][para->id];
 		}
 		//if(i % 1000 == 0)std::cout << i << std::endl;
 		para->obj->setData(para->id * para->count + i, temp);
@@ -66,6 +85,12 @@ void CINSMSegyReader::pRead(ThreadParam * para) {
 	delete para;
 }
 
+void CINSMSegyReader::UpdataThreshold() {
+	for (int i = 0; i < ThreadNum; i++) {
+		vMax = Thresholds[1][i] > vMax ? Thresholds[1][i] : vMax;
+		vMin = Thresholds[0][i] < vMin ? Thresholds[0][i] : vMin;
+	}
+}
 
 float CINSMSegyReader::IBM2IEEE(Data in)
 {
@@ -149,8 +174,11 @@ float CINSMSegyReader::IBM2IEEE(Data in)
 	return ui.a;
 }
 
-bool CINSMSegyReader::ReadSegyFile() 
-{
+float CINSMSegyReader::IEEEfloat(Data in) {
+	return in.a;
+}
+
+bool CINSMSegyReader::ReadSegyHeader() {
 	ifstream ifile;
 	ifile.open(fileName, ios::binary | ios::in);
 
@@ -159,13 +187,26 @@ bool CINSMSegyReader::ReadSegyFile()
 		return false;
 	}
 
+	HeadData th;
+
 	//3221-3222字节 读取数据道采样点数
 	ifile.seekg(3220L, ios::beg);
-	ifile.read(si.s, 2);
-	char ch = si.s[0];
-	si.s[0] = si.s[1];
-	si.s[1] = ch;
+	ifile.read(th.s, 2);
+	swap2(th);
+	si = th.a;
 	
+	//3225-3225字节 读取数据类型
+	//1  4 byte IBM浮点数
+	//2  4字节，两互补整数
+	//3  2字节，两互补整数
+	//4,6,7  不使用
+	//5  4 byte IEEE浮点数
+	//8  1字节，两互补整数
+	ifile.seekg(3224L, ios::beg);
+	ifile.read(th.s, 2);
+	swap2(th);
+	dataType = th.a;
+
 	//union HeadData sp;//定义采样率
 	////3217-3218字节 读取数据采样率
 	//ifile.seekg(3216L, ios::beg);
@@ -173,13 +214,13 @@ bool CINSMSegyReader::ReadSegyFile()
 	//ch = sp.s[0];
 	//sp.s[0] = sp.s[1];
 	//sp.s[1] = ch;
-	
-	
-	int traceSize = si.a * 4 + 240;
+
+
+	int traceSize = si * 4 + 240;
 	traceCount = (getSize() - 3600) / traceSize;//计算道数 
 
 	int count = traceCount / ThreadNum;
-	
+
 	data = new float*[traceCount];
 
 	Data buffer;
@@ -209,7 +250,34 @@ bool CINSMSegyReader::ReadSegyFile()
 	ilineCount = ie - is + 1;
 
 	ifile.close();
+	isReadHeader = true;
+	return true;
+}
+
+bool CINSMSegyReader::ReadSegyFile() 
+{
+	if (!isReadHeader && !ReadSegyHeader())
+		return false;
+
+	switch (dataType)
+	{
+	case 1:
+		dataTransfrom = IBM2IEEE;
+		break;
+	case 5:
+	default:
+		dataTransfrom = IEEEfloat;
+		break;
+	}
+	int count = traceCount / ThreadNum + 1;
+	int traceSize = si * 4 + 240;
+
+	Thresholds[0] = new float[ThreadNum];
+	Thresholds[1] = new float[ThreadNum];
+
 	for (int i = 0; i < ThreadNum; i++) {
+		Thresholds[0][i] = FLT_MAX;
+		Thresholds[1][i] = -FLT_MAX;
 		ThreadParam* para = new ThreadParam{
 			i,
 			count,
@@ -224,4 +292,9 @@ bool CINSMSegyReader::ReadSegyFile()
 	//while (!isOk());
 
 	return true;
+}
+
+
+float ** CINSMSegyReader::_NormlizeData() {
+	return nullptr;
 }
